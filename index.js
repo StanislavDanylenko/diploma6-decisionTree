@@ -81,5 +81,6 @@ createFile = () => {
     console.log(`File: ${FILE_NAME} created and populated by header.`)
 }
 
+// config:
 // npm install decision-tree
 // npm i -s csv-parser
