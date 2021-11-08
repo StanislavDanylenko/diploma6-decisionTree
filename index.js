@@ -3,8 +3,6 @@ const app = express()
 const port = 3001
 
 const DecisionTree = require('decision-tree');
-const fs = require('fs');
-const csv = require('csv-parser');
 
 const FILE_NAME = 'data.csv';
 const EOL = '\n';
@@ -13,8 +11,8 @@ var writer;
 
 var training_data = [];
 var test_data = []; // todo fill me
-const class_name = "Clazz";
-const features = ["Fan1", "Fan2", "Fan3", "Fan4", "Fan5", "Fan6", "Fan7", "Fan8", "Fan9"];
+const class_name = "clazz";
+const features = [];
 
 var DT;
 
@@ -41,44 +39,39 @@ app.get('/read', (req, res) => {
 })
 
 app.listen(port, () => {
-    createFile();
+    calculateFeatures();
     console.log(`Example app listening at http://localhost:${port}`)
 })
 
-readAndProcess = () => {
-    fs.createReadStream(FILE_NAME)
-        .pipe(csv())
-        .on('data', (row) => {
-            training_data.push(row);
-        })
-        .on('end', () => {
-            console.log('CSV file successfully processed');
-            console.log(training_data);
-            DT = new DecisionTree(training_data, class_name, features);
-            console.log('Stop teaching');
-        });
+calculateFeatures = () => {
+    for (let i = 0; i < 450; i++) {
+        features.push('time' + i)
+    }
 }
 
-/////////// moved to main module
+readAndProcess = () => {
+    let lineReader = require('readline').createInterface({
+                                                             input: require('fs').createReadStream('test.txt')
+                                                         });
 
-app.get('/write', (req, res) => {
-    let arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 'class1'];
+    lineReader.on('line', function (line) {
+        let values = line.split(',');
+        let len = 450;
+        // let len = 6;
+        if (len !== values.length) {
+            throw new Error("Wrong line length");
+        }
+        let obj = {};
+        for (let i = 0; i < len - 1; i++) {
+            obj[`time${i+1}`] = values[i];
+        }
+        obj['clazz'] = values[len - 1];
+        console.log(obj);
 
-    for (let i = 0; i < 100; i++) {
-        arr[0] = i;
-        writer.write(
-            `${arr[0]},${arr[1]},${arr[2]},${arr[3]},${arr[4]},${arr[5]},${arr[6]},${arr[7]},${arr[8]},${arr[9]}` + EOL)
-    }
-
-    res.send('wrote')
-})
-
-createFile = () => {
-    writer = fs.createWriteStream(FILE_NAME, {
-        flags: 'a'
+        test_data.push(obj);
     });
-    writer.write(`Fan1,Fan2,Fan3,Fan4,Fan5,Fan6,Fan7,Fan8,Fan9,Clazz` + EOL)
-    console.log(`File: ${FILE_NAME} created and populated by header.`)
+
+    DT = new DecisionTree(training_data, class_name, features);
 }
 
 // config:
