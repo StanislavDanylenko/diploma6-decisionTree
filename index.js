@@ -33,13 +33,24 @@ app.get('/evaluate', (req, res) => {
     res.send('' + accuracy)
 })
 
-app.get('/read', (req, res) => {
-    readAndProcess();
+/*app.get('/read', (req, res) => {
+    read();
     res.send('read')
+})*/
+
+app.get('/train', (req, res) => {
+    console.log(training_data.length);
+    // console.log(training_data);
+    console.log(features.length);
+    // console.log(features);
+
+    DT = new DecisionTree(training_data, class_name, features);
+    console.log('Trained.');
 })
 
 app.listen(port, () => {
     calculateFeatures();
+    read();
     console.log(`Example app listening at http://localhost:${port}`)
 })
 
@@ -47,17 +58,17 @@ calculateFeatures = () => {
     for (let i = 0; i < 450; i++) {
         features.push('time' + i)
     }
+    features.push('clazz');
 }
 
-readAndProcess = () => {
+read = () => {
     let lineReader = require('readline').createInterface({
-                                                             input: require('fs').createReadStream('test.txt')
+                                                             input: require('fs').createReadStream('data.csv')
                                                          });
 
     lineReader.on('line', function (line) {
         let values = line.split(',');
-        let len = 450;
-        // let len = 6;
+        let len = 451;
         if (len !== values.length) {
             throw new Error("Wrong line length");
         }
@@ -66,12 +77,10 @@ readAndProcess = () => {
             obj[`time${i+1}`] = values[i];
         }
         obj['clazz'] = values[len - 1];
-        console.log(obj);
+        // console.log(obj);
 
-        test_data.push(obj);
+        training_data.push(obj);
     });
-
-    DT = new DecisionTree(training_data, class_name, features);
 }
 
 // config:
