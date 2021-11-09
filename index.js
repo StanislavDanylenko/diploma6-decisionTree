@@ -10,7 +10,8 @@ var writer;
 
 
 var training_data = [];
-var test_data = []; // todo fill me
+var test_data = [];
+
 const class_name = "clazz";
 const features = [];
 
@@ -21,22 +22,18 @@ app.get('/', (req, res) => {
 })
 
 app.get('/predict', (req, res) => {
-    var predicted_class = DT.predict({
-                                         color: "blue",
-                                         shape: "hexagon"
-                                     });
+    let num = req.query.num;
+    var predicted_class = DT.predict(test_data[num]);
     res.send(predicted_class)
 })
 
 app.get('/evaluate', (req, res) => {
-    var accuracy = DT.evaluate(test_data_example);
+    console.log(test_data.length);
+    console.log(test_data[0]);
+    var accuracy = DT.evaluate(test_data);
     res.send('' + accuracy)
 })
 
-/*app.get('/read', (req, res) => {
-    read();
-    res.send('read')
-})*/
 
 app.get('/train', (req, res) => {
     console.log(training_data.length);
@@ -46,11 +43,13 @@ app.get('/train', (req, res) => {
 
     DT = new DecisionTree(training_data, class_name, features);
     console.log('Trained.');
+    res.send('Trained.')
 })
 
 app.listen(port, () => {
     calculateFeatures();
-    read();
+    read('data.csv', training_data, false);
+    read('data-test5.csv', test_data, true);
     console.log(`Example app listening at http://localhost:${port}`)
 })
 
@@ -61,9 +60,9 @@ calculateFeatures = () => {
     features.push('clazz');
 }
 
-read = () => {
+read = (filename, dataset, skipLast) => {
     let lineReader = require('readline').createInterface({
-                                                             input: require('fs').createReadStream('data.csv')
+                                                             input: require('fs').createReadStream(filename)
                                                          });
 
     lineReader.on('line', function (line) {
@@ -76,10 +75,11 @@ read = () => {
         for (let i = 0; i < len - 1; i++) {
             obj[`time${i+1}`] = values[i];
         }
-        obj['clazz'] = values[len - 1];
-        // console.log(obj);
+        if (!skipLast) {
+            obj['clazz'] = values[len - 1];
+        }
 
-        training_data.push(obj);
+        dataset.push(obj);
     });
 }
 
